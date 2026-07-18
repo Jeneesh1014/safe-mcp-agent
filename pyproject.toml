@@ -1,0 +1,77 @@
+[tool.poetry]
+name = "safe-mcp-agent"
+version = "0.1.0"
+description = "A local LLM agent (LangGraph + MCP) with a red-teamed guardrail layer and an automated evaluation harness."
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    { include = "reference_system", from = "." },
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+# Agent framework
+langgraph = "^0.2"
+
+# MCP — official Python SDK
+mcp = "^1.0"
+
+# LLM backend (Ollama-compatible)
+langchain-ollama = "^0.2"
+langchain-core = "^0.3"
+
+# Data validation across boundaries
+pydantic = "^2.7"
+
+# Observability
+opentelemetry-sdk = "^1.25"
+opentelemetry-api = "^1.25"
+
+# Storage
+# (sqlite3 is part of the standard library — no extra dep needed)
+
+[tool.poetry.group.dev.dependencies]
+# Testing
+pytest = "^8.2"
+pytest-asyncio = "^0.23"
+
+# Code quality — enforced by pre-commit
+black = "^24.4"
+isort = "^5.13"
+flake8 = "^7.1"
+pre-commit = "^3.7"
+
+# Type checking (optional but helpful)
+mypy = "^1.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# ===========================================================
+# Tool configuration
+# ===========================================================
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.flake8]
+# flake8 doesn't read pyproject.toml natively — kept here as documentation.
+# Actual config lives in .flake8 at the repo root.
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (LLM-dependent) — deselect with -m 'not slow'",
+    "security: marks tests that run attack scripts",
+]
+testpaths = ["tests"]

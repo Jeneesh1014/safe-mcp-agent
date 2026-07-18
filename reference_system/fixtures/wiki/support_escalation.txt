@@ -1,0 +1,5 @@
+Support Escalation Procedure
+=============================
+Tier 1: frontline agents handle billing and account queries.
+Tier 2: escalate if refund > $500 or if the customer is enterprise tier.
+Tier 3: engineering — only for confirmed data integrity issues.

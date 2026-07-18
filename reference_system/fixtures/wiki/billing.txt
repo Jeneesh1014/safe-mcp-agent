@@ -1,0 +1,6 @@
+Billing Policy
+==============
+Invoices are generated on the 1st of each month.
+Premium and enterprise tiers receive a 10-day payment window.
+Standard tier: 30-day window.
+Disputes must be raised within 60 days of the invoice date.

@@ -1,0 +1,5 @@
+Data Handling Guidelines
+========================
+Customer PII must not be included in outbound Slack messages.
+Account balances are CONFIDENTIAL and must not be shared externally.
+Requests for data exports must go through the data-privacy@example.com team.
