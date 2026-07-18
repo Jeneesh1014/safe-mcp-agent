@@ -9,4 +9,5 @@ Tools (Week 2):
 No security validation lives here intentionally. That is the middleware's job.
 Week 2 target: all three tools callable, returning realistic-looking mock data.
 """
+
 # TODO(week-2): implement MCP server with three tools

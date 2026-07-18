@@ -6,6 +6,7 @@ red-teaming it. Passing these first is the acceptance criterion for Week 3.
 
 Test naming convention: test_<scenario>_<expected_outcome>
 """
+
 import pytest
 
 

@@ -13,6 +13,7 @@ These files ARE committed to git (they're source, not runtime state).
 The SQLite .db is an exception to the normal .gitignore rule because it
 is the seed data, not a trace or test output.
 """
+
 from __future__ import annotations
 
 import sqlite3

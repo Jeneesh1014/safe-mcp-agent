@@ -8,6 +8,7 @@ Includes:
   - Any other session-level fixtures shared across test_agent_behavior.py
     and test_security.py live here, not in the individual test files.
 """
+
 import pytest
 
 OLLAMA_BASE_URL = "http://localhost:11434"

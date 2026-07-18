@@ -17,4 +17,5 @@ SAFE-MCP technique IDs this module is expected to block once implemented:
   - SAFE-T1203: tool argument hijacking / parameter overloading
   - SAFE-T1208: indirect data exfiltration via a downstream tool
 """
+
 # TODO(week-5): implement guardrail middleware

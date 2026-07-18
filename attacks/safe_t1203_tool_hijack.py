@@ -15,4 +15,5 @@ Week 4 target:
 Usage:
     python attacks/safe_t1203_tool_hijack.py
 """
+
 # TODO(week-4): implement attack script

@@ -12,4 +12,5 @@ Responsibilities (Week 3):
 Week 3 acceptance: run 5-10 varied prompts manually and confirm the agent
 behaves sensibly before moving to red-teaming (ROADMAP.md Week 4).
 """
+
 # TODO(week-3): implement LangGraph agent
