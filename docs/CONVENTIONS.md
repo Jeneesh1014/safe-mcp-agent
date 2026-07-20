@@ -110,6 +110,25 @@ not restate the type hints.
   slow LLM-dependent checks. Mark the slow ones so `pytest -m "not slow"` gives a
   quick local loop.
 
+## Attribution for third-party dependencies
+
+The knowledge base tool wraps OpenKB (VectifyAI), which itself uses PageIndex for
+tree-based retrieval. Be precise in comments, commit messages, and the README about
+what was built versus what was integrated:
+
+- Correct: "integrated OpenKB to compile mock enterprise documents into a
+  queryable knowledge base" or "built a guardrail layer that defends an
+  OpenKB-backed MCP tool against indirect injection."
+- Wrong: implying the retrieval engine or the compilation pipeline was built from
+  scratch. It wasn't — the original engineering here is the MCP server, the
+  LangGraph agent, the guardrail middleware, and the evaluation harness. OpenKB is
+  a dependency being put under test, the same way a real security engineer would
+  evaluate a third-party tool their company adopted.
+
+This distinction matters in an interview — being clear about it reads as more
+credible, not less, since it shows you know exactly which parts of the system are
+yours.
+
 ## Naming: application vs. library
 
 Two names exist for two different things — don't let them blur together in code,

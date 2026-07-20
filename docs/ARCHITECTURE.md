@@ -65,9 +65,13 @@ stand on its own, not lean on internal shortcuts into the app.
 safe-mcp-agent/
 ├── reference_system/          the agent under test
 │   ├── agent.py                LangGraph graph: nodes, edges, routing logic
-│   ├── mcp_server.py            the MCP server and its three tools
+│   ├── mcp_server.py            the MCP server and its tools
 │   ├── middleware.py            guardrail interception layer
-│   └── fixtures/                mock data: sqlite db, wiki text files, message log
+│   ├── data/
+│   │   ├── raw_docs/             mock enterprise PDFs fed into OpenKB (checked in)
+│   │   └── wiki/                 OpenKB's compiled output — gitignored, regenerated
+│   │                             by running the compile step, not committed as state
+│   └── fixtures/                mock data: sqlite db, flat-text wiki fallback, message log
 │
 ├── agenteval/                  the evaluation library — published separately as
 │   │                           `mcp-guardeval` on PyPI, usable outside this repo
@@ -119,6 +123,7 @@ boundary. They're two separate concerns that happen to live in the same repo.
 | Local inference | Ollama | Runs natively on Apple Silicon with GPU access, no API cost, no network dependency |
 | Agent framework | LangGraph | Cyclical/stateful orchestration — the thing companies are actually asking for by name |
 | Tool protocol | MCP (official Python SDK) | The thing this whole project is about; also now genuinely standard, not a bet |
+| Knowledge base | OpenKB (VectifyAI) + PageIndex, configured for local Ollama via LiteLLM | Compiles raw documents into a cross-referenced wiki with tree-based retrieval instead of vector chunking — gives the agent a realistic target and the guardrail layer a realistic thing to defend, instead of a flat text file. Compile step runs against a local model, same as everything else — see the section below |
 | Tracing | OpenTelemetry (`gen_ai.*` semantic conventions) | Using the real standard instead of a homemade JSON format means the traces are meaningful to anyone who's seen OTel before |
 | Storage | SQLite | Zero setup, fine for local dev, easy to inspect by hand when debugging |
 | Test/eval runner | pytest + custom plugin | Keeps the security suite runnable the same way as normal unit tests — one command, one report |
@@ -138,6 +143,28 @@ iteration painful. So:
 This isn't a workaround to apologize for in the README — it's a normal, documented
 pattern for local-inference development and worth stating plainly as a design
 decision.
+
+## OpenKB's compile step: local only, no exceptions
+
+Everything in this system runs on free, local inference — this includes OpenKB's
+document-compilation step (turning raw PDFs into the cross-referenced wiki), not just
+the agent's live request path.
+
+OpenKB uses LiteLLM under the hood, which natively supports routing to a local Ollama
+model instead of a hosted API. Set this in `.openkb/config.yaml` before running the
+first compile:
+
+```yaml
+model: ollama/llama3        # or ollama/qwen2.5, or whatever's pulled locally
+```
+
+Compilation will take longer on an M1 Pro than it would against a hosted frontier
+model, and the resulting wiki may come out a bit rougher — fewer cross-references,
+simpler summaries. That's the accepted tradeoff for staying at $0 cost, not a bug to
+route around with a paid key. If a specific mock document consistently produces a bad
+compile, the fix is a stronger local model (if one fits in the M1 Pro's memory) or a
+simpler, shorter mock document — never a hosted API call, even for this one offline
+step.
 
 ## Data model notes
 

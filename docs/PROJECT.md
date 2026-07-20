@@ -39,9 +39,9 @@ the whole point of this project.
 
 So instead of building "an agent," we're building four things that fit together:
 
-1. **A target** — a small MCP server with tools an agent can call (customer lookup,
-   internal wiki search, sending a Slack-style message). Deliberately built with no
-   security at first.
+1. **A target** — a small MCP server with tools an agent can call: customer lookup,
+   a compiled knowledge-base query (via OpenKB — see below), and sending a
+   Slack-style message. Deliberately built with no security at first.
 2. **A brain** — a LangGraph agent that decides which tools to call and in what order
    to accomplish a task.
 3. **A shield** — a guardrail layer sitting between the agent and the MCP server that
@@ -55,9 +55,56 @@ The end state isn't a demo you click through once. It's a `pytest` suite you can
 that spits out a report: which attacks got through, which got blocked, and how that
 changes when you swap the model underneath.
 
+## The knowledge base: OpenKB, not a flat text reader
+
+The original plan had `read_internal_wiki` just reading plain text files — fine for a
+first pass, but it made the "target" the least impressive part of the system and gave
+the guardrail layer nothing realistic to defend. We're replacing it with
+[OpenKB](https://github.com/VectifyAI/OpenKB), a real, actively maintained open-source
+tool that compiles raw documents (PDFs, Word, Markdown, etc.) into a structured,
+cross-referenced wiki using an LLM, backed by PageIndex's tree-based retrieval instead
+of vector chunking.
+
+Why this is worth the extra dependency:
+
+- It gives the agent something genuinely non-trivial to query — a compiled knowledge
+  base with summaries, concept pages, and cross-references, not a keyword search over
+  flat files.
+- It gives the guardrail layer a much more realistic thing to defend. Content sitting
+  inside compiled documents is a real attack surface (indirect prompt injection via
+  retrieved content, not just the user's direct message) — a genuinely harder and more
+  enterprise-relevant problem than a single vulnerable database field.
+- It's local-first compatible: OpenKB supports local models through LiteLLM
+  (including Ollama), so it fits the zero-API-cost constraint for day-to-day use.
+
+Two things to keep honest about this dependency, so it doesn't quietly eat the
+timeline:
+
+- **The compile step happens once, up front**, not repeatedly during development.
+  Treat it as Week 1 prep: compile the mock documents early, then just query the
+  result for the rest of the build.
+- **Everything runs local, including the compile step — no exceptions, $0 cost.**
+  OpenKB uses LiteLLM under the hood, which natively supports routing to a local
+  Ollama model (e.g. `ollama/llama3` or `ollama/qwen2.5`) instead of a hosted API.
+  Configure `.openkb/config.yaml` to point at the local Ollama endpoint before
+  running the first compile. Compilation may take longer on an M1 Pro than it
+  would against a hosted frontier model, and the resulting wiki may be a bit
+  rougher — that's an accepted tradeoff, not a problem to solve by reaching for a
+  paid key. If a specific document consistently produces a bad compile, the fix is
+  a better local model or a simpler mock document, not an API call.
+- **OpenKB's "Skill Factory" feature is not a committed deliverable.** It looks
+  genuinely useful (auto-generating agent skills from the compiled wiki) but is
+  newer and less proven than the core compile/query functionality. Treat it as a
+  stretch goal — nice if time allows in Week 8, not something the roadmap depends on.
+- The original flat-text `read_internal_wiki` tool stays in as a fallback. It costs
+  almost nothing to keep and gives Week 7's benchmarking an extra angle: naive
+  retrieval vs. tree-based retrieval, on top of the model/quantization comparison
+  already planned.
+
 ## What "done" looks like
 
-- A working MCP server exposing 3 mock enterprise tools, running locally.
+- A working MCP server exposing 3 tools (customer lookup, OpenKB-backed wiki query,
+  plus the flat-text fallback reader, and message sending), running locally.
 - A LangGraph agent that can chain those tools to complete multi-step requests.
 - A guardrail middleware that intercepts every tool call, checks it against a defined
   threat model, and logs what it blocks (not just silently drops it).
@@ -131,6 +178,12 @@ person who knew what they were doing, not stitched together.
 - **Hardware:** MacBook M1 Pro. Ollama runs natively on the host for GPU access
   (Metal) — it does not run inside Docker. Anything containerized talks to it over
   `host.docker.internal`.
-- **Cost:** Zero. No OpenAI/Anthropic API keys required to run the core system.
+- **Cost: $0.00, no exceptions.** No OpenAI/Anthropic API keys anywhere in this
+  project, including one-off or setup-only steps. Every LLM call — agent
+  reasoning, guardrail decisions, and OpenKB's document compilation — runs through
+  local Ollama models. If a step is tempting to solve with a hosted API call
+  because a local model struggles, the answer is a better local model, a smaller
+  prompt, or a simpler mock document — not a paid key. This is a hard constraint,
+  not a default that bends under time pressure.
 - **Reproducibility:** Anyone should be able to `git clone`, run one setup command,
   and have the whole thing running locally within a few minutes.
