@@ -63,5 +63,3 @@ benchmark_output/
 .env.local
 .env.*.local
 secrets/
-
-PROJECT_STATE.md
