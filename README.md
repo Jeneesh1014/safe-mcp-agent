@@ -64,7 +64,7 @@ and [`docs/ROADMAP.md`](docs/ROADMAP.md) for the week-by-week plan.
 ## Hardware constraint
 
 Ollama runs **natively on the host** (not in Docker) to access the Mac GPU via Metal.
-Containers reach it at `http://host.docker.internal:11434`.
+
 
 ## License
 
