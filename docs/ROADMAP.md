@@ -9,22 +9,22 @@ unchecked items are exactly what's left to do.
 
 ## Week 0 — before any code (do this first, not part of the 8 weeks)
 
-- [ ] Create the GitHub repo: `safe-mcp-agent`, public, MIT license
-- [ ] Set repo description: "A local LLM agent (LangGraph + MCP) with a red-teamed
+- [x] Create the GitHub repo: `safe-mcp-agent`, public, MIT license
+- [x] Set repo description: "A local LLM agent (LangGraph + MCP) with a red-teamed
       guardrail layer and an automated evaluation harness that benchmarks security
       and task performance across models."
-- [ ] Add topics: `langgraph`, `mcp`, `model-context-protocol`, `ai-agents`,
+- [x] Add topics: `langgraph`, `mcp`, `model-context-protocol`, `ai-agents`,
       `llm-security`, `prompt-injection`, `ollama`, `agent-evaluation`, `python`
-- [ ] Add `.gitignore` (Python + macOS + `*.db`/`*.db-wal`/`*.db-journal`)
-- [ ] Add placeholder `README.md` (title, one line, "🚧 in progress" — real one
+- [x] Add `.gitignore` (Python + macOS + `*.db`/`*.db-wal`/`*.db-journal`)
+- [x] Add placeholder `README.md` (title, one line, "🚧 in progress" — real one
       gets written in Week 8)
-- [ ] Commit and push all four planning docs: `docs: initial project documentation
+- [x] Commit and push all four planning docs: `docs: initial project documentation
       and planning`
-- [ ] Confirm Ollama is installed and responding: `ollama pull <model>`, then check
+- [x] Confirm Ollama is installed and responding: `ollama pull <model>`, then check
       `localhost:11434` answers
-- [ ] Confirm Poetry is installed
-- [ ] Confirm Docker Desktop is installed and running
-- [ ] Install pre-commit hooks locally so formatting is enforced from commit #2 on
+- [x] Confirm Poetry is installed
+- [x] Confirm Docker Desktop is installed and running
+- [x] Install pre-commit hooks locally so formatting is enforced from commit #2 on
 
 ## Phase 1 — Build the target (Weeks 1–3)
 
