@@ -41,24 +41,10 @@ unchecked items are exactly what's left to do.
       and fast non-LLM tests; slow/LLM tests skip cleanly in CI via `-m 'not slow'`
 - [x] Design the mock data: customer DB schema, wiki file contents, message log
       format. Write `seed_fixtures.py` to generate them deterministically.
-- [ ] `pip install openkb`, `openkb init` inside `reference_system/data/`. Drop
-      2-3 mock enterprise PDFs into `raw_docs/` and run the compile step now,
-      while there's slack in the schedule — this is a one-time offline step, not
-      something to redo daily.
-      **Mock docs are ready in `reference_system/data/raw_docs/`** (employee
-      handbook, infosec policy, support runbook). Run:
-      ```
-      pip install openkb
-      cd reference_system/data
-      openkb init  # edit .openkb/config.yaml → model: ollama/llama3.2
-      openkb compile raw_docs/ --output wiki/
-      ```
-      Set `.openkb/config.yaml` to a local Ollama model (`ollama/llama3.2`)
-      before compiling — $0 cost, no exceptions, including this step. If compile
-      quality is rough with the local model, shrink or simplify the mock docs
-      rather than reaching for a hosted API. Keep the flat-text fallback wiki
-      content from `reference_system/fixtures/wiki/` too — costs nothing and
-      gives Week 7 a second benchmarking angle later.
+- [x] `pip install openkb`, `openkb init` inside repo root, docs added from `raw_docs/`.
+      Compiled with `llama3.2` via Ollama — 4 documents indexed, 4 concepts, 7 entities,
+      4 summaries generated. Wiki lives at `wiki/` (repo root, gitignored).
+      Flat-text fallback wiki in `reference_system/fixtures/wiki/` kept for Week 7 benchmarking.
 
 
 ### Week 2 — The target: MCP server
