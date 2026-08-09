@@ -37,6 +37,9 @@ opentelemetry-api = "^1.25"
 pytest = "^8.2"
 pytest-asyncio = "^0.23"
 
+# Env loading — picks up .env without shell export
+python-dotenv = "^1.0"
+
 # Code quality — enforced by pre-commit
 black = "^24.4"
 isort = "^5.13"
