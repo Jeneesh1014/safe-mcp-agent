@@ -30,27 +30,36 @@ unchecked items are exactly what's left to do.
 
 ### Week 1 — Setup and scaffolding
 
-- [ ] Initialize repo structure per `ARCHITECTURE.md`
-- [ ] `pyproject.toml` with Poetry, core deps pinned (langgraph, mcp, opentelemetry,
+- [x] Initialize repo structure per `ARCHITECTURE.md`
+- [x] `pyproject.toml` with Poetry, core deps pinned (langgraph, mcp, opentelemetry,
       pydantic, pytest)
-- [ ] Pre-commit hooks: black, isort, flake8
-- [ ] `.gitignore` covers `*.db`, `*.db-journal`, `*.db-wal`, `.venv`, `__pycache__`
-- [ ] `tests/conftest.py`: Ollama pre-warm fixture (hit the model once before the test
+- [x] Pre-commit hooks: black, isort, flake8
+- [x] `.gitignore` covers `*.db`, `*.db-journal`, `*.db-wal`, `.venv`, `__pycache__`
+- [x] `tests/conftest.py`: Ollama pre-warm fixture (hit the model once before the test
       run starts, so the first real test doesn't eat a cold-start timeout)
-- [ ] GitHub Actions skeleton in `.github/workflows/ci.yml` — even if it just runs
-      `pytest --collect-only` for now, get the pipe working early
-- [ ] Design the mock data: customer DB schema, wiki file contents, message log
+- [x] GitHub Actions skeleton in `.github/workflows/ci.yml` — runs `pytest --collect-only`
+      and fast non-LLM tests; slow/LLM tests skip cleanly in CI via `-m 'not slow'`
+- [x] Design the mock data: customer DB schema, wiki file contents, message log
       format. Write `seed_fixtures.py` to generate them deterministically.
 - [ ] `pip install openkb`, `openkb init` inside `reference_system/data/`. Drop
-      2-3 mock enterprise PDFs into `raw_docs/` (e.g. a fake employee handbook, a
-      fake policy document) and run the compile step now, while there's slack in
-      the schedule — this is a one-time offline step, not something to redo daily.
-      Set `.openkb/config.yaml` to a local Ollama model (`ollama/llama3` or
-      `ollama/qwen2.5`) before compiling — $0 cost, no exceptions, including this
-      step. If compile quality is rough with the local model, shrink or simplify
-      the mock PDFs rather than reaching for a hosted API. Keep the flat-text
-      fallback wiki content from the original plan too — costs nothing and gives
-      Week 7 a second benchmarking angle later.
+      2-3 mock enterprise PDFs into `raw_docs/` and run the compile step now,
+      while there's slack in the schedule — this is a one-time offline step, not
+      something to redo daily.
+      **Mock docs are ready in `reference_system/data/raw_docs/`** (employee
+      handbook, infosec policy, support runbook). Run:
+      ```
+      pip install openkb
+      cd reference_system/data
+      openkb init  # edit .openkb/config.yaml → model: ollama/llama3.2
+      openkb compile raw_docs/ --output wiki/
+      ```
+      Set `.openkb/config.yaml` to a local Ollama model (`ollama/llama3.2`)
+      before compiling — $0 cost, no exceptions, including this step. If compile
+      quality is rough with the local model, shrink or simplify the mock docs
+      rather than reaching for a hosted API. Keep the flat-text fallback wiki
+      content from `reference_system/fixtures/wiki/` too — costs nothing and
+      gives Week 7 a second benchmarking angle later.
+
 
 ### Week 2 — The target: MCP server
 
