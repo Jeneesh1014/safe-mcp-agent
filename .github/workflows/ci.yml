@@ -45,7 +45,7 @@ jobs:
 
       - name: Install deps
         run: |
-          pip install pytest pytest-asyncio pydantic
+          pip install pytest pytest-asyncio pydantic python-dotenv
           # Install agenteval as editable so reference_system can import it
           pip install -e ./agenteval
 
@@ -53,6 +53,7 @@ jobs:
         run: python scripts/seed_fixtures.py
 
       - name: Run fast tests (no LLM)
-        # Slow/LLM-dependent tests need Ollama — skip in CI for now.
-        # Week 7 will add a self-hosted runner with Ollama if needed.
+        # Slow/LLM-dependent tests require Ollama — excluded in CI.
+        # The ollama_warmup fixture skips automatically when Ollama isn't
+        # reachable, so -m 'not slow' is the only guard needed here.
         run: pytest tests/ -m "not slow" -v

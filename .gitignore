@@ -63,3 +63,11 @@ benchmark_output/
 .env.local
 .env.*.local
 secrets/
+
+# OpenKB runtime: compiled wiki output and local model config
+reference_system/data/wiki/
+!reference_system/data/wiki/.gitkeep
+.openkb/
+
+# Keep .env.example committed — it is the reference template
+!.env.example
