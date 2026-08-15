@@ -49,7 +49,7 @@ unchecked items are exactly what's left to do.
 
 ### Week 2 — The target: MCP server
 
-- [ ] `mcp_server.py` exposing four tools:
+- [x] `mcp_server.py` exposing four tools:
   - `query_customer_db(customer_id)` — reads from the seeded SQLite DB
   - `query_openkb_wiki(question)` — queries the OpenKB-compiled knowledge base
         from Week 1, using its tree-based retrieval rather than blind chunking
@@ -57,10 +57,10 @@ unchecked items are exactly what's left to do.
         a comparison point for Week 7's benchmarking
   - `send_slack_message(channel, text)` — appends to a local log file, doesn't
         actually send anything anywhere
-- [ ] Input schemas defined with Pydantic for each tool
-- [ ] No security yet — this week is deliberately wide open. Resist the urge to add
+- [x] Input schemas defined with Pydantic for each tool
+- [x] No security yet — this week is deliberately wide open. Resist the urge to add
       validation here; that comes in Week 5 once we know what we're defending against.
-- [ ] Manual smoke test: call each tool directly and confirm it returns sane output,
+- [x] Manual smoke test: call each tool directly and confirm it returns sane output,
       including a couple of multi-hop questions against the OpenKB wiki to confirm
       the compiled knowledge base actually holds up
 
