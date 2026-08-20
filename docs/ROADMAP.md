@@ -66,7 +66,7 @@ unchecked items are exactly what's left to do.
 
 ### Week 3 — The brain: LangGraph orchestrator
 
-- [ ] `agent.py`: graph definition, nodes for reasoning + tool execution
+- [x] `agent.py`: graph definition, nodes for reasoning + tool execution
 - [ ] Agent can take a natural-language request and correctly choose which tool(s)
       to call
 - [ ] Agent can chain 2+ tool calls in sequence for a multi-step request
