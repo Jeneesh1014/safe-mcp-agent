@@ -67,13 +67,13 @@ unchecked items are exactly what's left to do.
 ### Week 3 — The brain: LangGraph orchestrator
 
 - [x] `agent.py`: graph definition, nodes for reasoning + tool execution
-- [ ] Agent can take a natural-language request and correctly choose which tool(s)
+- [x] Agent can take a natural-language request and correctly choose which tool(s)
       to call
-- [ ] Agent can chain 2+ tool calls in sequence for a multi-step request
+- [x] Agent can chain 2+ tool calls in sequence for a multi-step request
       (example: "look up customer 4471 and send them their balance")
-- [ ] Wire up OpenTelemetry spans on the LangGraph hooks so every LLM call and tool
+- [x] Wire up OpenTelemetry spans on the LangGraph hooks so every LLM call and tool
       call gets traced
-- [ ] Manual test: run 5-10 varied prompts, confirm the agent behaves sensibly before
+- [x] Manual test: run 5-10 varied prompts, confirm the agent behaves sensibly before
       moving on — don't start red-teaming a system you haven't confirmed works
 
 ## Phase 2 — Attack and defend (Weeks 4–5)
