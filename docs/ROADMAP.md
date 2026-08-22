@@ -188,13 +188,3 @@ unchecked items are exactly what's left to do.
       distilled automatically from the compiled knowledge base"). If it's flaky
       or the feature isn't stable enough to rely on, drop it without guilt — this
       was never a committed deliverable, just a bonus if the tooling cooperates.
-
-## Ten percent side-quest — open source (optional, not on the critical path)
-
-- [ ] Fork `langchain-ai/langgraph`
-- [ ] Find one `good first issue` (docs fix, missing type hint, small test)
-- [ ] Get it through review and merged
-
-This isn't scheduled into a specific week on purpose — pick it up in whatever
-downtime shows up around a slow PR review cycle elsewhere, and don't let it block
-anything in Phases 1-3.
