@@ -30,11 +30,15 @@ it can be manipulated by injected text in its context window.
 
 ## Technique coverage
 
-| Technique ID | Name | Status | Mitigation in `middleware.py` |
-|---|---|---|---|
-| SAFE-T1201 | Prompt injection — tool hijack | 🔴 Undefended (Week 3) | TODO(week-5) |
-| SAFE-T1203 | Tool argument hijacking | 🔴 Undefended (Week 3) | TODO(week-5) |
-| SAFE-T1208 | Indirect data exfiltration | 🔴 Undefended (Week 3) | TODO(week-5) |
+| Technique ID | Name | Category | Status | Mitigation in `middleware.py` |
+|---|---|---|---|---|
+| SAFE-T1201 | Prompt injection — tool hijack | Execution | 🔴 Undefended (Week 4) | TODO(week-5) |
+| SAFE-T1203 | Tool argument hijacking | Execution | 🔴 Undefended (Week 4) | TODO(week-5) |
+| SAFE-T1208 | Indirect data exfiltration | Exfiltration | 🔴 Undefended (Week 4) | TODO(week-5) |
+| SAFE-T1301 | Context instruction planting (persistence) | Persistence | 🔴 Undefended (Week 4) | TODO(week-5) |
+| SAFE-T1601 | System prompt disclosure | Discovery | 🔴 Undefended (Week 4) | TODO(week-5) |
+| SAFE-T1102 | Indirect injection via retrieved content | Execution | 🔴 Undefended (Week 4) | TODO(week-5) |
+| SAFE-T1501 | Cross-tool PII harvesting | Collection | 🔴 Undefended (Week 4) | TODO(week-5) |
 
 Status key: 🔴 Undefended → 🟡 Partially mitigated → 🟢 Blocked (with test)
 
