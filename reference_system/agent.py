@@ -50,6 +50,7 @@ from reference_system.mcp_server import query_customer_db as _query_customer_db
 from reference_system.mcp_server import query_openkb_wiki as _query_openkb_wiki
 from reference_system.mcp_server import read_internal_wiki as _read_internal_wiki
 from reference_system.mcp_server import send_slack_message as _send_slack_message
+from reference_system.middleware import Session, guardrail_check
 
 load_dotenv()
 
@@ -232,6 +233,7 @@ _TOOL_MAP: dict[str, Any] = {t.name: t for t in _TOOLS}
 # history stays intact across multiple tool call iterations.
 class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
+    session: Session
 
 
 _SYSTEM_PROMPT = """You are a helpful enterprise assistant. You have access to
@@ -297,8 +299,13 @@ def execute_tools(state: AgentState) -> dict:
     and then message them, it needs the first result before the second call.
     Each dispatch gets its own tool.dispatch span so we can see what ran and
     how long it took.
+
+    The guardrail middleware runs before each tool call. If it returns a
+    BlockResult, the tool is not invoked and the block reason is returned
+    to the LLM as a ToolMessage.
     """
     last_message: AIMessage = state["messages"][-1]  # type: ignore[assignment]
+    session: Session = state.get("session") or Session()  # type: ignore[arg-type]
     results: list[ToolMessage] = []
 
     for tc in last_message.tool_calls:
@@ -314,7 +321,18 @@ def execute_tools(state: AgentState) -> dict:
                 "tool.args": json.dumps(args),
             },
         ) as span:
-            if name not in _TOOL_MAP:
+            block = guardrail_check(name, args, session)
+            if block:
+                content = json.dumps(
+                    {
+                        "error": f"BLOCKED by guardrail: {block.reason}",
+                        "technique_id": block.technique_id,
+                    }
+                )
+                span.set_attribute("tool.blocked", "true")
+                span.set_attribute("tool.block_reason", block.reason)
+                span.set_attribute("tool.block_technique", block.technique_id)
+            elif name not in _TOOL_MAP:
                 content = json.dumps(
                     {"error": f"Unknown tool {name!r}. Available: {list(_TOOL_MAP)}"}
                 )
@@ -374,7 +392,9 @@ def run(prompt: str) -> str:
             "gen_ai.request.model": _OLLAMA_MODEL,
         },
     ):
-        state = graph.invoke({"messages": [HumanMessage(content=prompt)]})
+        state = graph.invoke(
+            {"messages": [HumanMessage(content=prompt)], "session": Session()}
+        )
 
     last: BaseMessage = state["messages"][-1]
     return last.content if isinstance(last.content, str) else str(last.content)

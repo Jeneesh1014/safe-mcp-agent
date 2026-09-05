@@ -20,3 +20,4 @@ Name: [name]
 Email: [email]
 Balance: [balance]
 [2026-08-28T15:13:18.787747+00:00] channel='#billing' | <Customer Name> has a balance of <balance>
+[2026-09-01T08:37:14.738695+00:00] channel='#support' | <@7731> is a customer with tier: {{tier}}

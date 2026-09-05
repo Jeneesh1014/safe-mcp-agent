@@ -100,19 +100,20 @@ unchecked items are exactly what's left to do.
 
 ### Week 5 — The shield: guardrail middleware
 
-- [ ] `middleware.py`: intercepts every tool call before it reaches the MCP server
-- [ ] Input validation against strict Pydantic schemas (catches malformed / injected
+- [x] `middleware.py`: intercepts every tool call before it reaches the MCP server
+- [x] Input validation against strict Pydantic schemas (catches malformed / injected
       arguments)
-- [ ] Permission scoping: each tool call is checked against a defined scope rather
+- [x] Permission scoping: each tool call is checked against a defined scope rather
       than assuming the agent has blanket access — this stops privilege creep across
       a multi-step conversation
-- [ ] Output filtering: block sensitive-looking data (dummy card numbers, tokens,
+- [x] Output filtering: block sensitive-looking data (dummy card numbers, tokens,
       credentials) from flowing into the outbound tool (`send_slack_message`)
-- [ ] Every block emits a structured log entry — technique ID (if known), tool name,
+- [x] Every block emits a structured log entry — technique ID (if known), tool name,
       timestamp, decision. A guardrail that blocks silently is invisible in
       production; don't build that.
-- [ ] Re-run all Week 4 attacks against the now-defended agent, confirm the ones you
-      expect to be blocked actually are
+- [x] Re-run all Week 4 attacks against the now-defended agent, confirm the ones you
+      expect to be blocked actually are — 6/7 blocked, T1601 (system prompt
+      disclosure) is the documented known gap
 
 ## Phase 3 — Measure and package (Weeks 6–8)
 

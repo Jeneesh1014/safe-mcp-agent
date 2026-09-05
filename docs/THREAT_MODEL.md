@@ -32,13 +32,13 @@ it can be manipulated by injected text in its context window.
 
 | Technique ID | Name | Category | Status | Mitigation in `middleware.py` |
 |---|---|---|---|---|
-| SAFE-T1201 | Prompt injection — tool hijack | Execution | 🔴 Undefended (Week 4) | TODO(week-5) |
-| SAFE-T1203 | Tool argument hijacking | Execution | 🔴 Undefended (Week 4) | TODO(week-5) |
-| SAFE-T1208 | Indirect data exfiltration | Exfiltration | 🔴 Undefended (Week 4) | TODO(week-5) |
-| SAFE-T1301 | Context instruction planting (persistence) | Persistence | 🔴 Undefended (Week 4) | TODO(week-5) |
-| SAFE-T1601 | System prompt disclosure | Discovery | 🔴 Undefended (Week 4) | TODO(week-5) |
-| SAFE-T1102 | Indirect injection via retrieved content | Execution | 🔴 Undefended (Week 4) | TODO(week-5) |
-| SAFE-T1501 | Cross-tool PII harvesting | Collection | 🔴 Undefended (Week 4) | TODO(week-5) |
+| SAFE-T1201 | Prompt injection — tool hijack | Execution | 🟢 Blocked | Channel allowlist in `check_permissions` |
+| SAFE-T1203 | Tool argument hijacking | Execution | 🟢 Blocked | Pydantic schemas in `validate_input` |
+| SAFE-T1208 | Indirect data exfiltration | Exfiltration | 🟢 Blocked | Channel allowlist + PII regex in `filter_output` |
+| SAFE-T1301 | Context instruction planting (persistence) | Persistence | 🟢 Blocked | Channel allowlist in `check_permissions` |
+| SAFE-T1601 | System prompt disclosure | Discovery | 🟡 Known gap | Not a tool call — requires prompt-level defense |
+| SAFE-T1102 | Indirect injection via retrieved content | Execution | 🟢 Blocked | Topic validation + channel allowlist + PII filter |
+| SAFE-T1501 | Cross-tool PII harvesting | Collection | 🟢 Blocked | Channel allowlist + call budget in `check_permissions` |
 
 Status key: 🔴 Undefended → 🟡 Partially mitigated → 🟢 Blocked (with test)
 
