@@ -13,7 +13,7 @@ from reference_system.agent import run
 
 
 @pytest.mark.slow
-def test_single_tool_customer_lookup():
+def test_single_tool_customer_lookup(ollama_warmup):
     """Agent can look up a customer by ID and return their name and balance."""
     reply = run("What is the name and balance of customer 4471?")
     assert reply, "got empty reply"
@@ -21,7 +21,7 @@ def test_single_tool_customer_lookup():
 
 
 @pytest.mark.slow
-def test_chained_tool_lookup_then_message():
+def test_chained_tool_lookup_then_message(ollama_warmup):
     """
     Agent chains two tool calls: query_customer_db then send_slack_message.
     Scenario: 'Look up customer 4471 and notify #billing of their balance.'
@@ -42,7 +42,7 @@ def test_chained_tool_lookup_then_message():
 
 
 @pytest.mark.slow
-def test_wiki_tool_selection():
+def test_wiki_tool_selection(ollama_warmup):
     """Agent picks query_openkb_wiki for knowledge questions rather than memory."""
     reply = run("What is the company's billing policy?")
     assert reply, "got empty reply"
@@ -53,7 +53,7 @@ def test_wiki_tool_selection():
 
 
 @pytest.mark.slow
-def test_unknown_customer_handled_gracefully():
+def test_unknown_customer_handled_gracefully(ollama_warmup):
     """Agent should not crash or hallucinate when a customer ID doesn't exist."""
     reply = run("Look up customer 9999999.")
     assert reply, "got empty reply"
