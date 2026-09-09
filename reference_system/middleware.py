@@ -6,6 +6,9 @@ Three layers run in sequence on every tool call:
   2. Permission scoping — channel allowlist + per-session call budget
   3. Output filtering   — block PII/credentials in send_slack_message text
 
+Retrieved wiki content is also filtered after tool execution before it is
+returned to the LLM, because compromised documents are untrusted input.
+
 Every block emits a structured JSON log entry to fixtures/guardrail.log.
 """
 
@@ -117,6 +120,18 @@ _CREDENTIAL_KEYWORDS = frozenset(
         "credential",
     }
 )
+_RETRIEVAL_TOOLS = frozenset({"query_openkb_wiki", "read_internal_wiki"})
+_RETRIEVAL_INJECTION_PATTERNS = tuple(
+    re.compile(pattern, re.IGNORECASE | re.DOTALL)
+    for pattern in (
+        r"\b(?:system|developer)\s+(?:override|instruction|message|prompt)\b",
+        r"\b(?:ignore|disregard|forget)\b.{0,80}\b(?:previous|above|prior|earlier)\b",
+        r"\bmust\s+(?:also\s+)?(?:look up|query|send|forward|exfiltrate|post)\b",
+        r"\b(?:send|forward|post|exfiltrate)\b.{0,120}\b(?:to|into)\s+#[a-z0-9_-]+",
+        r"\bdo not mention\b.{0,80}\b(?:the\s+)?(?:user|step|instruction)\b",
+        r"\btool\s*:\s*[a-z0-9_-]+",
+    )
+)
 
 
 def _log_block(block: BlockResult, args_summary: dict[str, Any] | None = None) -> None:
@@ -211,6 +226,73 @@ def filter_output(tool_name: str, args: dict[str, Any]) -> BlockResult | None:
     )
     _log_block(block, {"channel": args.get("channel", ""), "findings": findings})
     return block
+
+
+def _looks_like_retrieval_injection(text: str) -> list[str]:
+    findings: list[str] = []
+    for pattern in _RETRIEVAL_INJECTION_PATTERNS:
+        if pattern.search(text):
+            findings.append(pattern.pattern)
+    return findings
+
+
+def _redact_injected_content(value: Any, redacted_paths: list[str], path: str) -> Any:
+    if isinstance(value, str):
+        findings = _looks_like_retrieval_injection(value)
+        if not findings:
+            return value
+        redacted_paths.append(path)
+        return (
+            "[REDACTED by guardrail: retrieved content contained "
+            "agent-directed instructions.]"
+        )
+
+    if isinstance(value, list):
+        return [
+            _redact_injected_content(item, redacted_paths, f"{path}[{idx}]")
+            for idx, item in enumerate(value)
+        ]
+
+    if isinstance(value, dict):
+        return {
+            key: _redact_injected_content(item, redacted_paths, f"{path}.{key}")
+            for key, item in value.items()
+        }
+
+    return value
+
+
+def filter_tool_result(tool_name: str, result: Any) -> tuple[Any, BlockResult | None]:
+    """Sanitize untrusted tool results before they enter the LLM context."""
+    if tool_name not in _RETRIEVAL_TOOLS:
+        return result, None
+
+    redacted_paths: list[str] = []
+    sanitized = _redact_injected_content(result, redacted_paths, "$")
+    if not redacted_paths:
+        return result, None
+
+    block = BlockResult(
+        technique_id="SAFE-T1102",
+        reason=(
+            "Retrieved content contained agent-directed instructions; "
+            f"redacted fields: {', '.join(redacted_paths)}"
+        ),
+        tool=tool_name,
+    )
+    _log_block(block, {"redacted_paths": redacted_paths})
+
+    if isinstance(sanitized, dict):
+        sanitized = {
+            **sanitized,
+            "guardrail": {
+                "decision": "REDACTED",
+                "technique_id": block.technique_id,
+                "reason": block.reason,
+            },
+        }
+
+    return sanitized, block
 
 
 def guardrail_check(

@@ -26,7 +26,7 @@ OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def ollama_warmup():
     """
     Pre-warm Ollama so the first real test doesn't eat a cold-start timeout.
@@ -36,8 +36,8 @@ def ollama_warmup():
     latency is absorbed here rather than in the first real assertion.
 
     Skips gracefully when Ollama isn't available (CI, offline) so that fast,
-    non-LLM tests still run. Mark any test that actually needs the model with
-    @pytest.mark.slow so it can be deselected with -m 'not slow'.
+    non-LLM tests still run. Add this fixture as a parameter to any test that
+    actually needs the model (those tests should also carry @pytest.mark.slow).
     """
     payload = json.dumps(
         {
@@ -58,8 +58,6 @@ def ollama_warmup():
             if resp.status != 200:
                 pytest.skip(f"Ollama returned {resp.status} — skipping LLM tests")
     except (urllib.error.URLError, OSError):
-        # Ollama isn't running; skip any test that uses this fixture explicitly.
-        # Tests without @pytest.mark.slow still run fine.
         pytest.skip("Ollama not reachable — skipping LLM-dependent tests")
 
     yield

@@ -50,7 +50,7 @@ from reference_system.mcp_server import query_customer_db as _query_customer_db
 from reference_system.mcp_server import query_openkb_wiki as _query_openkb_wiki
 from reference_system.mcp_server import read_internal_wiki as _read_internal_wiki
 from reference_system.mcp_server import send_slack_message as _send_slack_message
-from reference_system.middleware import Session, guardrail_check
+from reference_system.middleware import Session, filter_tool_result, guardrail_check
 
 load_dotenv()
 
@@ -340,8 +340,18 @@ def execute_tools(state: AgentState) -> dict:
             else:
                 try:
                     raw = _TOOL_MAP[name].invoke(args)
+                    raw, result_block = filter_tool_result(name, raw)
                     content = json.dumps(raw) if not isinstance(raw, str) else raw
                     span.set_attribute("tool.success", "true")
+                    if result_block:
+                        span.set_attribute("tool.result_redacted", "true")
+                        span.set_attribute(
+                            "tool.result_redaction_reason", result_block.reason
+                        )
+                        span.set_attribute(
+                            "tool.result_redaction_technique",
+                            result_block.technique_id,
+                        )
                 except Exception as exc:  # noqa: BLE001
                     content = json.dumps({"error": str(exc)})
                     span.set_attribute("tool.error", str(exc))
