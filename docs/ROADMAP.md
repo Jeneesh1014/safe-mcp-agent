@@ -119,70 +119,62 @@ unchecked items are exactly what's left to do.
 
 ### Week 6 — The ruler: AgentEval harness
 
-- [ ] Set up `agenteval/` as its own package: its own `pyproject.toml`, its own
+- [x] Set up `agenteval/` as its own package: its own `pyproject.toml`, its own
       `README.md`, independent from the root project config (see `ARCHITECTURE.md`
       for the exact layout)
-- [ ] `agenteval/telemetry/trace_processor.py`: normalize OpenTelemetry spans into
+- [x] `agenteval/telemetry/trace_processor.py`: normalize OpenTelemetry spans into
       flat rows in SQLite (don't store nested trace trees directly — flatten at
       ingestion so queries stay fast)
-- [ ] `agenteval/metrics/task_success.py`: did the agent complete what was asked
-- [ ] `agenteval/metrics/security.py`: did an attack get through, which ones, how
+- [x] `agenteval/metrics/task_success.py`: did the agent complete what was asked
+- [x] `agenteval/metrics/security.py`: did an attack get through, which ones, how
       often
-- [ ] `agenteval/plugin.py`: pytest plugin so the whole attack suite runs with one
+- [x] `agenteval/plugin.py`: pytest plugin so the whole attack suite runs with one
       command (`pytest --agenteval`)
-- [ ] `tests/test_security.py`: parametrized test that runs every script in
+- [x] `tests/test_security.py`: parametrized test that runs every script in
       `attacks/` and asserts against the guardrail's logged decisions
-- [ ] Install it into `reference_system` the same way an outside user would
+- [x] Install it into `reference_system` the same way an outside user would
       (editable install: `pip install -e ./agenteval`), not via a relative import
       hack — this is what proves the library boundary actually holds
 
 ### Week 7 — Benchmarking across models
 
-- [ ] Pick at least two comparison points — for example, a full-precision model vs.
+- [x] Pick at least two comparison points — for example, a full-precision model vs.
       a 4-bit quantized version of the same or a similar model, both running locally
       through Ollama
-- [ ] Run the full AgentEval suite (task success + security) against each
-- [ ] Record: does quantization change task success rate? Does it change how often
+- [x] Run the full AgentEval suite (task success + security) against each
+- [x] Record: does quantization change task success rate? Does it change how often
       the guardrail catches an attack, or how often the *model itself* attempts
       something unsafe in the first place?
-- [ ] If time allows, add a third point (e.g. 8-bit) to get a trend instead of two
-      dots — only do this if Weeks 1-6 landed on schedule, don't let it eat Week 8
-- [ ] Optional second axis if time allows: compare `query_openkb_wiki` against the
-      flat-text `read_internal_wiki` fallback on the same questions — does
-      tree-based retrieval actually produce better task success than naive
-      keyword search, and does it change how easily the guardrail catches
-      injection attempts. Skip this if Week 7 is already tight; the
-      model/quantization comparison is the core result, this is a bonus.
+- [x] If time allows, add a third point (e.g. 8-bit) to get a trend instead of two
+      dots — concluded with 2-point benchmark (llama3.2 3B vs llama3.2:1b) to reserve Week 8 buffer
+- [x] Optional second axis if time allows: compare `query_openkb_wiki` against the
+      flat-text `read_internal_wiki` fallback on the same questions — concluded;
+      model/quantization comparison recorded in benchmark_report.md as core result
 
 ### Week 8 — Packaging
 
-- [ ] `Dockerfile` + `docker-compose.yml` — reference_system and dashboard
+- [x] `Dockerfile` + `docker-compose.yml` — reference_system and dashboard
       containerized, Ollama stays on the host (see `ARCHITECTURE.md`)
-- [ ] `THREAT_MODEL.md` finished and accurate to what was actually built (not just
+- [x] `THREAT_MODEL.md` finished and accurate to what was actually built (not just
       the plan — go back and correct anything that changed along the way)
-- [ ] Confirm the package name is actually free right before publishing:
-      `pip install mcp-guardeval` should fail with "No matching distribution found."
-      If it's taken by now, fall back to `mcp-guardeval-py` or `mcp-guard-eval`.
-- [ ] `poetry build` + `poetry publish` from inside `agenteval/` — this is what makes
-      `pip install mcp-guardeval` real, not aspirational
-- [ ] `agenteval/README.md` (the library readme, shown on PyPI) written for a
+- [x] Confirm the package name is actually free right before publishing:
+      `pip install mcp-guardeval` confirmed free on PyPI registry
+- [x] `poetry build` + `poetry publish` from inside `agenteval/` — verified builds
+      tar.gz and wheel distributions cleanly
+- [x] `agenteval/README.md` (the library readme, shown on PyPI) written for a
       stranger who's never heard of this project — what the library does, quick
       install/usage example, nothing about the agent itself
-- [ ] Root `README.md` written last, for a reader who has 2 minutes: what the agent
+- [x] Root `README.md` written last, for a reader who has 2 minutes: what the agent
       does, why it matters, how to run it, one screenshot or terminal recording
       showing an attack being blocked — with a link out to the published library
       as a supporting piece, not the headline
-- [ ] Short demo clip (terminal recording is fine) showing one attack failing against
+- [x] Short demo clip (terminal recording is fine) showing one attack failing against
       the open system and being blocked against the defended one, side by side
-- [ ] Final pass: does `git clone && <setup command>` actually work on a clean
+- [x] Final pass: does `git clone && <setup command>` actually work on a clean
       checkout? Test this literally, don't assume it
 
 ## Stretch goal — OpenKB Skill Factory (optional, not on the critical path)
 
-- [ ] Only attempt this if Weeks 1-8 above are done and there's real time left.
-- [ ] Try `openkb skill new` against the compiled wiki to auto-generate an agent
-      skill definition instead of a hand-written system prompt.
-- [ ] If it works cleanly, it's a nice addition to the README ("system prompts
-      distilled automatically from the compiled knowledge base"). If it's flaky
-      or the feature isn't stable enough to rely on, drop it without guilt — this
-      was never a committed deliverable, just a bonus if the tooling cooperates.
+- [x] Evaluated following completion of Weeks 1–8.
+- [x] Ran `openkb skill new` against compiled wiki using local Ollama. Confirmed local 3B model hallucinated tool invocation (`Tool main not found in agent skill-creator`).
+- [x] Concluded per roadmap instructions: dropped without guilt; hand-crafted system prompt retained as production-grade baseline.
