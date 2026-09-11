@@ -33,14 +33,29 @@ it can be manipulated by injected text in its context window.
 | Technique ID | Name | Category | Status | Mitigation in `middleware.py` |
 |---|---|---|---|---|
 | SAFE-T1201 | Prompt injection — tool hijack | Execution | 🟢 Blocked | Channel allowlist in `check_permissions` |
-| SAFE-T1203 | Tool argument hijacking | Execution | 🟢 Blocked | Pydantic schemas in `validate_input` |
+| SAFE-T1203 | Tool argument hijacking | Execution | 🟢 Blocked | Pydantic v2 schemas in `validate_input` |
 | SAFE-T1208 | Indirect data exfiltration | Exfiltration | 🟢 Blocked | Channel allowlist + PII regex in `filter_output` |
 | SAFE-T1301 | Context instruction planting (persistence) | Persistence | 🟢 Blocked | Channel allowlist in `check_permissions` |
-| SAFE-T1601 | System prompt disclosure | Discovery | 🟡 Known gap | Not a tool call — requires prompt-level defense |
-| SAFE-T1102 | Indirect injection via retrieved content | Execution | 🟢 Blocked | Topic validation + channel allowlist + PII filter |
-| SAFE-T1501 | Cross-tool PII harvesting | Collection | 🟢 Blocked | Channel allowlist + call budget in `check_permissions` |
+| SAFE-T1601 | System prompt disclosure | Discovery | 🟢 Blocked | Verbatim fragment & key detection in `filter_final_response` |
+| SAFE-T1102 | Indirect injection via retrieved content | Execution | 🟢 Blocked | In-band redaction in `filter_tool_result` + channel allowlist |
+| SAFE-T1501 | Cross-tool PII harvesting | Collection | 🟢 Blocked | Stateful session call budget in `check_permissions` |
 
 Status key: 🔴 Undefended → 🟡 Partially mitigated → 🟢 Blocked (with test)
+
+## Defense Architecture in `middleware.py`
+
+The guardrail layer intercepts agent actions across three interception points:
+
+1. **Pre-Tool Dispatch (`guardrail_check`)**:
+   - `validate_input`: Enforces strict Pydantic v2 schemas (`CustomerIdInput`, `WikiQueryInput`, `SlackMessageInput`). Rejects SQL injection payloads and path traversal attempts (`../`) before any backend execution.
+   - `check_permissions`: Enforces channel allowlist (`#billing`, `#support`, `#general`), disallowing untrusted exfiltration destinations (`#attacker-dump`, `#external-reports`). Enforces a stateful session call budget (maximum 3 customer record lookups per multi-turn session) preventing mass PII harvesting.
+   - `filter_output`: Inspects tool arguments destined for outbound sinks, matching sensitive patterns (credit cards, API keys, passwords, SSNs).
+
+2. **In-Band RAG Sanitization (`filter_tool_result`)**:
+   - Inspects content returned from external sources (wiki queries, document searches) before it enters the LLM's conversation history. Replaces known injection markers (e.g. `[SYSTEM INSTRUCTION]`, `OVERRIDE:`, exfiltration directives) with `[REDACTED: suspicious injection directive removed]`.
+
+3. **Post-Reasoning Output Redaction (`filter_final_response`)**:
+   - Sanitizes the agent's final natural language response to the user. Scans for credential patterns (`_SECRET_KEY_RE`) and verbatim system prompt instruction disclosures (`_SYSTEM_PROMPT_LEAK_RE`), replacing compromised replies with an explicit security block message.
 
 ## Out of scope
 
