@@ -1,21 +1,28 @@
 [tool.poetry]
 name = "mcp-guardeval"
-version = "0.1.0"
-description = "Automated evaluation harness for MCP-based agents: task success scoring, security attack suite, and OpenTelemetry trace analysis."
-authors = ["Your Name <you@example.com>"]
+version = "0.2.0"
+description = "Evaluate MCP-based LLM agents for task success and security resilience. Configurable attack catalog, OpenTelemetry trace analysis, and pytest integration."
+authors = ["Jeneesh Surani <jeneeshsurani@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [
     { include = "agenteval" },
 ]
-keywords = ["mcp", "langgraph", "agent-evaluation", "llm-security", "opentelemetry"]
+keywords = ["mcp", "langgraph", "agent-evaluation", "llm-security", "opentelemetry", "guardrails", "red-team"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Testing",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
+
+[tool.poetry.urls]
+Homepage = "https://github.com/Jeneesh1014/safe-mcp-agent"
+Repository = "https://github.com/Jeneesh1014/safe-mcp-agent"
+"Bug Tracker" = "https://github.com/Jeneesh1014/safe-mcp-agent/issues"
 
 [tool.poetry.dependencies]
 python = "^3.11"
