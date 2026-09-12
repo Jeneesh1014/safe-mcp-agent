@@ -132,11 +132,26 @@ _RETRIEVAL_INJECTION_PATTERNS = tuple(
         r"\btool\s*:\s*[a-z0-9_-]+",
     )
 )
+_SYSTEM_PROMPT_LEAK_RE = re.compile(
+    r"(?:You are a helpful enterprise assistant|"
+    r"access to four tools|"
+    r"(?:use|call) the tools in the right order|"
+    r"chain the results naturally|"
+    r"Always prefer query_openkb_wiki over read_internal_wiki|"
+    r"Do not mention tool internals unless asked)",
+    re.IGNORECASE,
+)
+_SECRET_KEY_RE = re.compile(
+    r"(?:-----BEGIN [A-Z ]*PRIVATE KEY-----|"
+    r"sk-[a-zA-Z0-9_-]{20,}|"
+    r"(?:api[_-]?key|secret[_-]?token|password)\s*[:=]\s*['\"][^\s'\"]+['\"])",
+    re.IGNORECASE,
+)
 
 
 def _log_block(block: BlockResult, args_summary: dict[str, Any] | None = None) -> None:
     _GUARDRAIL_LOG.parent.mkdir(parents=True, exist_ok=True)
-    entry = {
+    entry: dict[str, Any] = {
         "timestamp": block.timestamp,
         "tool": block.tool,
         "decision": "BLOCKED",
@@ -311,3 +326,32 @@ def guardrail_check(
         return block
 
     return None
+
+
+def filter_final_response(text: str) -> tuple[str, BlockResult | None]:
+    """Inspect and sanitize the agent's final natural language response."""
+    findings: list[str] = []
+    technique_id = "SAFE-T1208"
+
+    if _SECRET_KEY_RE.search(text):
+        findings.append("credential or private key detected")
+        technique_id = "SAFE-T1208"
+
+    if _SYSTEM_PROMPT_LEAK_RE.search(text):
+        findings.append("system prompt disclosure detected")
+        technique_id = "SAFE-T1601"
+
+    if not findings:
+        return text, None
+
+    block = BlockResult(
+        technique_id=technique_id,
+        reason=f"Final response blocked: {', '.join(findings)}",
+        tool="agent.final_response",
+    )
+    _log_block(block, {"findings": findings})
+    redacted = (
+        "[REDACTED by guardrail: response contained sensitive credentials "
+        "or unauthorized system instruction disclosure.]"
+    )
+    return redacted, block

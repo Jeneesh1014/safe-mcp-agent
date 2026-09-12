@@ -43,14 +43,19 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 from typing_extensions import Annotated, TypedDict
 
 from reference_system.mcp_server import query_customer_db as _query_customer_db
 from reference_system.mcp_server import query_openkb_wiki as _query_openkb_wiki
 from reference_system.mcp_server import read_internal_wiki as _read_internal_wiki
 from reference_system.mcp_server import send_slack_message as _send_slack_message
-from reference_system.middleware import Session, filter_tool_result, guardrail_check
+from reference_system.middleware import (
+    Session,
+    filter_final_response,
+    filter_tool_result,
+    guardrail_check,
+)
 
 load_dotenv()
 
@@ -61,7 +66,7 @@ _OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 
 # Writes OTel spans into a flat SQLite table so AgentEval can query them
 # with a simple SELECT. Flattening here avoids reconstructing nested trees later.
-class _SQLiteSpanExporter:
+class _SQLiteSpanExporter(SpanExporter):
     def __init__(self, db_path: Path) -> None:
         import sqlite3
 
@@ -91,7 +96,24 @@ class _SQLiteSpanExporter:
 
         from opentelemetry.sdk.trace.export import SpanExportResult
 
-        conn = sqlite3.connect(str(self._db_path))
+        target_db = _TRACES_DB
+        target_db.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(str(target_db))
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS spans (
+                trace_id    TEXT,
+                span_id     TEXT PRIMARY KEY,
+                parent_id   TEXT,
+                name        TEXT,
+                start_ns    INTEGER,
+                end_ns      INTEGER,
+                duration_ms REAL,
+                attributes  TEXT,
+                status      TEXT
+            )
+            """
+        )
         try:
             for span in spans:
                 ctx = span.get_span_context()
@@ -153,7 +175,7 @@ _tracer = _setup_tracer()
 
 
 @tool
-def query_customer_db(customer_id: str) -> dict:
+def query_customer_db(customer_id: str | int) -> dict:
     """Look up a customer record by customer_id.
 
     Returns a dict with keys: id, name, email, balance, tier.
@@ -162,9 +184,12 @@ def query_customer_db(customer_id: str) -> dict:
     Args:
         customer_id: The numeric or string customer ID to look up.
     """
+    # Ollama often emits numeric IDs as JSON integers; coerce to str
+    # before the middleware and MCP server see them.
+    customer_id = str(customer_id)
     with _tracer.start_as_current_span(
         "tool.query_customer_db",
-        attributes={"tool.name": "query_customer_db", "customer_id": str(customer_id)},
+        attributes={"tool.name": "query_customer_db", "customer_id": customer_id},
     ):
         return _query_customer_db(customer_id=customer_id)
 
@@ -252,8 +277,13 @@ specifically asks for the flat-text wiki.
 Be concise in your final answer. Do not mention tool internals unless asked."""
 
 
-def _build_llm() -> ChatOllama:
-    llm = ChatOllama(model=_OLLAMA_MODEL, base_url=_OLLAMA_BASE_URL, temperature=0)
+def _build_llm() -> Any:
+    llm = ChatOllama(
+        model=_OLLAMA_MODEL,
+        base_url=_OLLAMA_BASE_URL,
+        temperature=0,
+        num_predict=1024,
+    )
     return llm.bind_tools(_TOOLS)
 
 
@@ -282,7 +312,7 @@ def reason(state: AgentState) -> dict:
         },
     ) as span:
         start = time.monotonic()
-        response: AIMessage = llm.invoke(history)
+        response: AIMessage = llm.invoke(history)  # type: ignore[assignment]
         elapsed_ms = (time.monotonic() - start) * 1000
 
         called = [tc["name"] for tc in (response.tool_calls or [])]
@@ -317,7 +347,7 @@ def execute_tools(state: AgentState) -> dict:
             "tool.dispatch",
             attributes={
                 "tool.name": name,
-                "tool.call_id": call_id,
+                "tool.call_id": str(call_id or ""),
                 "tool.args": json.dumps(args),
             },
         ) as span:
@@ -325,8 +355,11 @@ def execute_tools(state: AgentState) -> dict:
             if block:
                 content = json.dumps(
                     {
-                        "error": f"BLOCKED by guardrail: {block.reason}",
-                        "technique_id": block.technique_id,
+                        "error": (
+                            "Execution blocked by security policy: "
+                            "operation not permitted."
+                        ),
+                        "tool": name,
                     }
                 )
                 span.set_attribute("tool.blocked", "true")
@@ -389,12 +422,15 @@ def _build_graph() -> Any:
 graph = _build_graph()
 
 
-def run(prompt: str) -> str:
+def run(prompt: str, session: Session | None = None) -> str:
     """Run the agent on a plain-English prompt and return its final reply.
 
     Entry point for both the test suite and the manual smoke tests.
     Every LLM call and tool dispatch gets traced to traces.db automatically.
     """
+    if session is None:
+        session = Session()
+
     with _tracer.start_as_current_span(
         "agent.run",
         attributes={
@@ -403,11 +439,14 @@ def run(prompt: str) -> str:
         },
     ):
         state = graph.invoke(
-            {"messages": [HumanMessage(content=prompt)], "session": Session()}
+            {"messages": [HumanMessage(content=prompt)], "session": session},
+            config={"recursion_limit": 10},
         )
 
     last: BaseMessage = state["messages"][-1]
-    return last.content if isinstance(last.content, str) else str(last.content)
+    raw_reply = last.content if isinstance(last.content, str) else str(last.content)
+    clean_reply, _ = filter_final_response(raw_reply)
+    return clean_reply
 
 
 if __name__ == "__main__":
