@@ -2,7 +2,7 @@
 name = "safe-mcp-agent"
 version = "0.1.0"
 description = "A local LLM agent (LangGraph + MCP) with a red-teamed guardrail layer and an automated evaluation harness."
-authors = ["Your Name <you@example.com>"]
+authors = ["Jeneesh Surani <jeneeshsurani@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [
@@ -31,6 +31,9 @@ opentelemetry-api = "^1.25"
 
 # Storage
 # (sqlite3 is part of the standard library — no extra dep needed)
+
+# Evaluation harness (editable standalone package)
+mcp-guardeval = {path = "agenteval", develop = true}
 
 [tool.poetry.group.dev.dependencies]
 # Testing
@@ -76,5 +79,15 @@ asyncio_mode = "auto"
 markers = [
     "slow: marks tests as slow (LLM-dependent) — deselect with -m 'not slow'",
     "security: marks tests that run attack scripts",
+    "benchmark: marks model benchmarking tests",
 ]
 testpaths = ["tests"]
+
+# mcp-guardeval plugin configuration
+guardeval_techniques = [
+    "SAFE-T1201", "SAFE-T1203", "SAFE-T1208",
+    "SAFE-T1301", "SAFE-T1601", "SAFE-T1102", "SAFE-T1501",
+]
+guardeval_log = "reference_system/fixtures/guardrail.log"
+guardeval_traces_db = "traces.db"
+guardeval_block_threshold = "0.85"

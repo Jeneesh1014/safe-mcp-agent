@@ -26,7 +26,6 @@ env/
 .envrc
 
 
-poetry.lock          # committed — remove this line if you want to pin exact deps
 pip-wheel-metadata/
 .pip-cache/
 
@@ -34,6 +33,9 @@ pip-wheel-metadata/
 *.db-wal
 *.db-shm
 *.db-journal
+
+# Keep fixture database committed as deterministic seed data
+!reference_system/fixtures/customers.db
 
 traces.db
 traces/
@@ -59,15 +61,15 @@ htmlcov/
 results/
 *.jsonl
 benchmark_output/
+benchmark_results.json
 
 .env.local
 .env.*.local
 secrets/
 
-# OpenKB runtime: compiled wiki output, raw doc copies, and local model config (all at repo root)
-wiki/
+# OpenKB runtime: raw doc copies and local cache gitignored, compiled wiki committed for zero-setup clones
 raw/
-.openkb/
+.openkb/cache/
 
 # Keep .env.example committed — it is the reference template
 !.env.example
