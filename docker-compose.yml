@@ -1,0 +1,18 @@
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: safe-mcp-agent
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=llama3.2
+      - PYTHONUNBUFFERED=1
+      - TRACES_DB=/app/traces/traces.db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./traces:/app/traces
+      - ./reference_system/fixtures:/app/reference_system/fixtures
+      - ./benchmark_output:/app/benchmark_output
+    command: poetry run pytest tests/test_security.py -v
