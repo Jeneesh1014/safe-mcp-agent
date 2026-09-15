@@ -1,0 +1,3 @@
+language: en
+model: ollama/llama3.2
+pageindex_threshold: 20

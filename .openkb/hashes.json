@@ -1,0 +1,34 @@
+{
+  "bb0e7ea56e01cada5950f6c0353912b6902474be2284365cccd3737d26480a98": {
+    "name": "README.md",
+    "doc_name": "README",
+    "type": "md",
+    "path": "reference_system/data/raw_docs/README.md",
+    "raw_path": "raw/README.md",
+    "source_path": "wiki/sources/README.md"
+  },
+  "936ad8e83158c2d47bb4e3110969abeedc6542c4d9b91fad20888991401b9fae": {
+    "name": "employee_handbook.txt",
+    "doc_name": "employee_handbook",
+    "type": "txt",
+    "path": "reference_system/data/raw_docs/employee_handbook.txt",
+    "raw_path": "raw/employee_handbook.txt",
+    "source_path": "wiki/sources/employee_handbook.md"
+  },
+  "c0d73029bc1c7be8a6a85fee86e177a1cc2a5efda9294b303cc10749cc7da17c": {
+    "name": "infosec_policy.txt",
+    "doc_name": "infosec_policy",
+    "type": "txt",
+    "path": "reference_system/data/raw_docs/infosec_policy.txt",
+    "raw_path": "raw/infosec_policy.txt",
+    "source_path": "wiki/sources/infosec_policy.md"
+  },
+  "a28a4bd3989c9b3bb36be22a968a434e1a11126a4a1c5cf059a424c24bcae8c5": {
+    "name": "support_runbook.txt",
+    "doc_name": "support_runbook",
+    "type": "txt",
+    "path": "reference_system/data/raw_docs/support_runbook.txt",
+    "raw_path": "raw/support_runbook.txt",
+    "source_path": "wiki/sources/support_runbook.md"
+  }
+}

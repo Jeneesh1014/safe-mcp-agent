@@ -1,0 +1,4 @@
+# OpenKB compiled wiki output lives here.
+# This directory is gitignored — regenerate with:
+#   cd reference_system/data
+#   openkb compile raw_docs/ --output wiki/
