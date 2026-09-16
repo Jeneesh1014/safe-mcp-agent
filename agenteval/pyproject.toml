@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mcp-guardeval"
-version = "0.3.2"
+version = "0.3.3"
 description = "Evaluate MCP-based LLM agents for task success and security resilience. Configurable attack catalog, OpenTelemetry trace analysis, and pytest integration."
 authors = ["Jeneesh Surani <jeneeshsurani@gmail.com>"]
 license = "MIT"

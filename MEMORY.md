@@ -31,7 +31,7 @@ This file is maintained dynamically across agent sessions. Keep this file update
 - **Dual Deliverables**:
   1. `safe-mcp-agent`: The application (Target MCP server, LangGraph agent brain, security shield/guardrails, telemetry).
   2. `agenteval` / `mcp-guardeval`: Standalone evaluation harness package intended for independent PyPI release.
-- **Current Phase**: Completed and released! `mcp-guardeval` v0.3.2 published on PyPI. v0.3.2 replaces the Mermaid diagram in the README with a static hosted image for PyPI compatibility, alongside the humanized README, standalone CLI (`guardeval`), flat public API imports, `CHANGELOG.md`, and deterministic scoring architecture documentation. Full 8-week roadmap + post-release polish completed.
+- **Current Phase**: Completed and released! `mcp-guardeval` v0.3.3 published on PyPI. v0.3.3 switches the architecture diagram in the README to PNG format for universal PyPI rendering, alongside the humanized README, standalone CLI (`guardeval`), flat public API imports, `CHANGELOG.md`, and deterministic scoring architecture documentation. Full 8-week roadmap + post-release polish completed.
 
 ---
 

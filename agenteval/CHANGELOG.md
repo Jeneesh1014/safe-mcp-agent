@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.3.3] — 2026-09-16
+
+### Changed
+- Switched architecture diagram to PNG format for universal PyPI rendering.
+
 ## [0.3.2] — 2026-09-16
 
 ### Changed
