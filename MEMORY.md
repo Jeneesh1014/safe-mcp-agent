@@ -9,6 +9,7 @@ This file is maintained dynamically across agent sessions. Keep this file update
 ## Voice & Interaction
 - **Tone**: Direct, concise, technical, and collaborative.
 - **Style**: Avoid unnecessary fluff or boilerplate preamble. Explain technical rationale ("why") when making recommendations.
+- **Human Writing Mode (`/human`)**: Standing preference. Write like an experienced engineer, not a language model. Avoid AI writing tells: no promotional puffery, no rhetorical sales hooks, no emoji bullets, no mechanical bolding of every list lead-in, no rule-of-three triplets by default, no repetitive em dashes, no copula avoidance ("serves as", "stands as"), and no filler openers or closers. Apply silently without narrating checklists.
 
 ---
 
@@ -30,7 +31,7 @@ This file is maintained dynamically across agent sessions. Keep this file update
 - **Dual Deliverables**:
   1. `safe-mcp-agent`: The application (Target MCP server, LangGraph agent brain, security shield/guardrails, telemetry).
   2. `agenteval` / `mcp-guardeval`: Standalone evaluation harness package intended for independent PyPI release.
-- **Current Phase**: Completed and released! `mcp-guardeval` v0.2.0 published on PyPI with configurable pytest plugin (`guardeval_techniques`, `guardeval_log`, `guardeval_traces_db`, `guardeval_block_threshold` via `pyproject.toml`), technique auto-discovery from guardrail logs, `summary()` convenience methods on result types, and a professional README written for external adopters. Full 8-week roadmap + post-release polish completed.
+- **Current Phase**: Completed and released! `mcp-guardeval` v0.3.2 published on PyPI. v0.3.2 replaces the Mermaid diagram in the README with a static hosted image for PyPI compatibility, alongside the humanized README, standalone CLI (`guardeval`), flat public API imports, `CHANGELOG.md`, and deterministic scoring architecture documentation. Full 8-week roadmap + post-release polish completed.
 
 ---
 

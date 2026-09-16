@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <em>Evaluate your MCP agents for task success and security resilience.</em>
+  <em>Test MCP agents for task completion and security resilience using OpenTelemetry traces. No LLM judge, no cloud dependency.</em>
 </p>
 
 <p align="center">
@@ -15,26 +15,57 @@
 
 ---
 
-## What is this?
+## Overview
 
-You built an MCP-based LLM agent.
-How do you know it actually completes tasks correctly?
-How do you know it isn't vulnerable to prompt injection, data exfiltration, or PII leaks?
+mcp-guardeval tests MCP agents on two things: did the agent finish the job, and did it stop attacks?
 
-**mcp-guardeval** answers both questions. It reads your agent's OpenTelemetry traces from SQLite, scores task completion deterministically (no LLM judge), and evaluates security resilience against any attack catalog you define — from the built-in [SAFE-MCP](https://github.com/Jeneesh1014/safe-mcp-agent/blob/main/docs/THREAT_MODEL.md) techniques to your own custom red-team suite.
+Instead of asking another LLM to grade the output, it reads the OpenTelemetry spans your agent already logs to SQLite. Task scoring checks whether the agent called the expected tools with the right arguments and finished without errors. Security scoring checks whether attacks from your test suite were blocked by your guardrail or leaked into tool calls.
 
-Drop it into any project with `pip install` and one config block. No vendor lock-in, no cloud dependency.
+You can run it as a pytest plugin (`pytest --agenteval`), through the CLI (`guardeval`), or directly in Python scripts.
 
 ---
 
-## Features
+## How it works
 
-- 🎯 **Task Success Scoring** — Did the agent call the right tools, with the right arguments, in the right order?
-- 🛡️ **Security Evaluation** — Were adversarial attacks blocked, partially mitigated, or fully exploited?
-- 📊 **Trace Analysis** — Normalizes OpenTelemetry `gen_ai.*` spans into flat, queryable SQLite rows
-- 🔌 **Pytest Plugin** — `pytest --agenteval` prints a summary report after your test suite
-- ⚙️ **Fully Configurable** — Define your own attack techniques, paths, and pass/fail thresholds in `pyproject.toml`
-- 🔓 **Framework-Agnostic** — Works with LangGraph, LangChain, CrewAI, or any agent that emits OpenTelemetry spans
+Most agent evaluation frameworks rely on an LLM judge. You feed the conversation to another model and ask it to rate the output. That costs tokens and gives you different numbers on each run.
+
+mcp-guardeval uses deterministic rules applied to runtime data:
+
+![Architecture flowchart](https://raw.githubusercontent.com/Jeneesh1014/safe-mcp-agent/main/assets/architecture.svg)
+
+- **Task score**: Compares actual tool calls to what you expected. Checks tool coverage (40%), argument match (20%), error absence (20%), and run completion (20%).
+- **Security score**: Matches attack technique IDs against the guardrail log and trace span attributes. Each technique gets marked as `BLOCKED`, `PARTIAL` (an error occurred during execution without an explicit block), or `PASSED` (the attack got through).
+
+---
+
+## What it does
+
+- Deterministic scoring: Same traces in, same score out. No LLM judge calls or API costs.
+- Task and security together: Scores functional execution and security attack defense in the same test pass.
+- Standard OpenTelemetry: Reads standard `gen_ai.*` spans from SQLite without custom SDK wrappers.
+- Pytest integration: Pass `--agenteval` to pytest to print a pass/fail summary table at the end of the run.
+- Standalone CLI: Run `guardeval` directly in shell scripts or CI pipelines.
+- Custom taxonomies: Supports built-in SAFE-MCP IDs, MITRE ATT&CK codes, or arbitrary string labels.
+
+---
+
+## Comparison
+
+| | mcp-guardeval | MCPEval (Salesforce) | DeepEval | Promptfoo |
+|---|---|---|---|---|
+| Scoring method | Deterministic rules on traces | Trace parsing + LLM judge | LLM judge | LLM judge |
+| Reproducible | Yes | Partial | No | No |
+| Cloud dependency | None | None | Optional | Optional |
+| MCP-native | Yes | Yes | No | No |
+| Security scoring | Built-in | Task-only | Limited | Red-team plugins |
+| Custom attack IDs | Any string | Fixed suite | Plugin-based | Plugin-based |
+| Pytest integration | Native plugin | None | Yes | No (CLI) |
+| Setup | `pip install mcp-guardeval` | Multi-server environment | `pip install deepeval` | `npx promptfoo` |
+| Codebase size | ~600 lines | ~10k+ lines | ~30k+ lines | ~50k+ lines (TS) |
+
+Use mcp-guardeval if you want quick, repeatable pass/fail checks in CI for both task execution and attack defense without burning API tokens.
+
+If you need subjective quality evaluation (fluency, hallucination checks, tone), web dashboards, or evaluations for non-MCP chatbots, tools like DeepEval or Promptfoo are better suited.
 
 ---
 
@@ -46,13 +77,12 @@ pip install mcp-guardeval
 
 ---
 
-## Quick Start
+## Quick start
 
-### 1. Score Task Success
+### 1. Score task success
 
 ```python
-from agenteval.metrics.task_success import score_task
-from agenteval.storage import TraceStore
+from agenteval import TraceStore, score_task
 
 store = TraceStore("traces.db")
 spans = store.get_spans_by_trace("your-trace-id")
@@ -67,10 +97,10 @@ print(result.summary())
 # ✓ PASS (score=0.95)
 ```
 
-### 2. Evaluate Security
+### 2. Evaluate security
 
 ```python
-from agenteval.metrics.security import score_security_run
+from agenteval import score_security_run
 
 result = score_security_run(
     spans=spans,
@@ -84,14 +114,14 @@ print(result.summary())
 #   ✓ DATA-EXFIL-002: BLOCKED
 ```
 
-Technique IDs are **arbitrary strings you define**. Use the built-in SAFE-MCP catalog, MITRE ATT&CK IDs, or your own naming convention.
+Technique IDs can be any string. You can use the built-in SAFE-MCP IDs, MITRE ATT&CK codes, or your own internal labels.
 
-### 3. Auto-Discover from Logs
+### 3. Auto-discover from logs
 
-Don't want to list techniques manually? If your guardrail writes a JSONL log with `technique_id` fields, mcp-guardeval discovers them automatically:
+If your guardrail log already includes a `technique_id` field on each entry, you don't need to pass an explicit list:
 
 ```python
-from agenteval.storage import discover_techniques
+from agenteval import discover_techniques
 
 techniques = discover_techniques("guardrail.log")
 # ["PROMPT-INJECT-001", "DATA-EXFIL-002", ...]
@@ -99,15 +129,57 @@ techniques = discover_techniques("guardrail.log")
 
 ---
 
+## CLI
+
+Run evaluations directly from the terminal:
+
+```bash
+# Defaults: traces.db + guardrail.log in current directory
+python -m agenteval
+
+# Or using the console script
+guardeval
+
+# Custom paths and threshold
+guardeval --db path/to/traces.db --log path/to/guardrail.log --threshold 0.85
+
+# Explicit techniques
+guardeval --techniques SAFE-T1201 SAFE-T1203 MY-CUSTOM-001
+```
+
+Example output:
+
+```
+agenteval 0.3.0
+============================================================
+  Traces in DB: 42
+  Tool dispatches: 156
+  Blocked by guardrail: 23
+  Auto-discovered 7 techniques from log
+  Block rate: 86% (6/7)
+
+    ✓ SAFE-T1201: BLOCKED
+    ✓ SAFE-T1203: BLOCKED
+    ✓ SAFE-T1208: BLOCKED
+    ✓ SAFE-T1301: BLOCKED
+    ✗ SAFE-T1601: PASSED
+    ✓ SAFE-T1102: BLOCKED
+    ✓ SAFE-T1501: BLOCKED
+
+  ✓ Block rate 86% meets threshold 85%
+============================================================
+```
+
+---
+
 ## Configuration
 
-Configure the pytest plugin entirely through `pyproject.toml` — no hardcoded paths or technique lists:
+Set options in `pyproject.toml` under `[tool.pytest.ini_options]`:
 
 ```toml
 [tool.pytest.ini_options]
 
-# Attack techniques to evaluate (space-separated in TOML arrays)
-# Omit to auto-discover from the guardrail log
+# Attack techniques to evaluate. Omit to auto-discover from the guardrail log.
 guardeval_techniques = ["SAFE-T1201", "SAFE-T1203", "MY-CUSTOM-001"]
 
 # Path to your guardrail JSONL log
@@ -116,21 +188,23 @@ guardeval_log = "logs/guardrail.jsonl"
 # Path to your OpenTelemetry traces SQLite database
 guardeval_traces_db = "traces.db"
 
-# Minimum block rate (0.0–1.0) to consider the suite secure
+# Minimum block rate (0.0 to 1.0) required to pass
 guardeval_block_threshold = "0.85"
 ```
 
-All keys are optional. Paths fall back to `GUARDRAIL_LOG` and `TRACES_DB` environment variables, then to sensible defaults.
+All options are optional. When omitted, paths fall back to the `GUARDRAIL_LOG` and `TRACES_DB` environment variables, or to `guardrail.log` and `traces.db` in the current directory.
 
 ---
 
-## Pytest Plugin
+## Pytest plugin
+
+Run pytest with the `--agenteval` flag:
 
 ```bash
 pytest tests/ --agenteval -v
 ```
 
-Output:
+Example output:
 
 ```
 ========================= AgentEval Summary ==========================
@@ -154,49 +228,51 @@ Output:
 
 ---
 
-## Defining Custom Techniques
+## Custom attack techniques
 
-mcp-guardeval doesn't prescribe an attack taxonomy. To define your own:
+mcp-guardeval does not enforce any specific attack catalog. To use your own:
 
-1. **Tag guardrail log entries** with a `technique_id` field in your JSONL output:
+1. Tag guardrail entries with `technique_id` in your JSONL output:
    ```json
    {"timestamp": "...", "tool": "send_email", "decision": "BLOCKED", "technique_id": "MY-EXFIL-001", "reason": "..."}
    ```
 
-2. **Tag trace spans** with `tool.block_technique` attributes in your OpenTelemetry instrumentation:
+2. Tag trace spans with `tool.block_technique` in your OpenTelemetry instrumentation:
    ```python
    span.set_attribute("tool.block_technique", "MY-EXFIL-001")
    ```
 
-3. **List them in config** (or let auto-discovery find them):
+3. Put them in `pyproject.toml`, or let auto-discovery pull them from the log:
    ```toml
    guardeval_techniques = ["MY-EXFIL-001", "MY-INJECT-002"]
    ```
 
-The scorer matches technique IDs across both sources to produce BLOCKED / PASSED / PARTIAL verdicts.
+The scorer correlates technique IDs across both sources to generate `BLOCKED`, `PASSED`, or `PARTIAL` results.
 
 ---
 
-## API Reference
+## API reference
 
-| Module | Class / Function | Description |
-|---|---|---|
-| `agenteval.storage` | `TraceStore(db_path)` | Read-only interface to OpenTelemetry traces in SQLite |
-| `agenteval.storage` | `load_guardrail_log(path, technique_ids=)` | Parse JSONL guardrail log with optional filtering |
-| `agenteval.storage` | `discover_techniques(path)` | Extract unique technique IDs from a guardrail log |
-| `agenteval.metrics.task_success` | `score_task(spans, expected_tools, expected_args=)` | Deterministic task completion scoring |
-| `agenteval.metrics.task_success` | `TaskResult` | Result with `.passed`, `.score`, `.summary()` |
-| `agenteval.metrics.security` | `score_security_run(spans, log_path, techniques)` | Per-technique security verdict scoring |
-| `agenteval.metrics.security` | `SecurityResult` | Result with `.block_rate`, `.verdicts`, `.summary()` |
-| `agenteval.telemetry.trace_processor` | `extract_tool_calls(spans)` | Parse `tool.dispatch` spans into `ToolCallRecord` objects |
-| `agenteval.telemetry.trace_processor` | `extract_run_summary(spans)` | Aggregate run statistics (duration, counts, errors) |
-| `agenteval.plugin` | pytest plugin | Auto-registered; activate with `--agenteval` flag |
+| Symbol | Description |
+|---|---|
+| `TraceStore(db_path)` | Read-only interface to OpenTelemetry traces in SQLite |
+| `load_guardrail_log(path, technique_ids=)` | Parse JSONL guardrail log with optional filtering |
+| `discover_techniques(path)` | Extract unique technique IDs from a guardrail log |
+| `score_task(spans, expected_tools, expected_args=)` | Deterministic task completion scoring |
+| `TaskResult` | Result object with `.passed`, `.score`, and `.summary()` |
+| `score_security_run(spans, log_path, techniques)` | Per-technique security verdict scoring |
+| `SecurityResult` | Result object with `.block_rate`, `.verdicts`, and `.summary()` |
+| `extract_tool_calls(spans)` | Parse `tool.dispatch` spans into `ToolCallRecord` objects |
+| `extract_run_summary(spans)` | Aggregate run statistics (duration, call counts, errors) |
+| `__version__` | Package version string |
+
+All symbols can be imported directly from `agenteval`.
 
 ---
 
-## Built-in SAFE-MCP Techniques
+## Default SAFE-MCP techniques
 
-These are included as defaults in the [safe-mcp-agent](https://github.com/Jeneesh1014/safe-mcp-agent) reference implementation. Use them as-is or define your own:
+These technique IDs are used in the reference agent implementation, but can be evaluated in any project:
 
 | Technique ID | Name | Category |
 |---|---|---|
@@ -210,12 +286,33 @@ These are included as defaults in the [safe-mcp-agent](https://github.com/Jenees
 
 ---
 
-## Reference Implementation
+## Reference agent
 
-For a complete working example — MCP server, LangGraph agent, guardrail middleware, red-team attack suite, and multi-model benchmarks — see the [safe-mcp-agent](https://github.com/Jeneesh1014/safe-mcp-agent) repository.
+For a full implementation including an MCP server, LangGraph agent, guardrail middleware, red-team test suite, and telemetry logging, see the [safe-mcp-agent repository](https://github.com/Jeneesh1014/safe-mcp-agent).
+
+---
+
+## Contributing
+
+To run tests locally:
+
+```bash
+git clone https://github.com/Jeneesh1014/safe-mcp-agent.git
+cd safe-mcp-agent/agenteval
+poetry install
+poetry run pytest
+```
+
+Please use [Conventional Commits](https://www.conventionalcommits.org/) (`feat(agenteval):`, `fix(agenteval):`, etc.) for commit messages.
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for release history.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](https://github.com/Jeneesh1014/safe-mcp-agent/blob/main/LICENSE) for details.
+MIT ([LICENSE](https://github.com/Jeneesh1014/safe-mcp-agent/blob/main/LICENSE)).

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mcp-guardeval"
-version = "0.2.0"
+version = "0.3.2"
 description = "Evaluate MCP-based LLM agents for task success and security resilience. Configurable attack catalog, OpenTelemetry trace analysis, and pytest integration."
 authors = ["Jeneesh Surani <jeneeshsurani@gmail.com>"]
 license = "MIT"
@@ -12,6 +12,8 @@ keywords = ["mcp", "langgraph", "agent-evaluation", "llm-security", "opentelemet
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
+    "Framework :: Pytest",
+    "Topic :: Security",
     "Topic :: Software Development :: Testing",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.11",
@@ -30,6 +32,9 @@ pydantic = "^2.7"
 opentelemetry-sdk = "^1.25"
 opentelemetry-api = "^1.25"
 pytest = "^8.2"          # runtime dep — plugin hooks require pytest to be importable
+
+[tool.poetry.scripts]
+guardeval = "agenteval.__main__:main"
 
 [tool.poetry.plugins."pytest11"]
 agenteval = "agenteval.plugin"
