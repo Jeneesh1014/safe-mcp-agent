@@ -1,6 +1,6 @@
 # Memory
 
-*Last Updated: 2026-09-11*
+*Last Updated: 2026-09-16*
 
 This file is maintained dynamically across agent sessions. Keep this file updated in-place whenever instructions, preferences, project status, or corrections occur.
 
@@ -60,7 +60,7 @@ This file is maintained dynamically across agent sessions. Keep this file update
 - **Dynamic Trace DB Routing**: `_SQLiteSpanExporter` connects to `_TRACES_DB` on each `export()` call, allowing test and benchmark harnesses to isolate traces per model without encountering OpenTelemetry's TracerProvider lock.
 - **Tool Argument Type Coercion (`str | int`)**: Quantized local LLMs (e.g. Ollama models) often emit numeric IDs like `4471` as JSON integers instead of strings. Defining tool signatures as `customer_id: str | int` ensures LangChain schema validation succeeds before internal string coercion.
 - **Verbatim Fragment Leak Detection**: LLMs leaking system prompts often emit intermediate phrases (e.g. "use the tools in the right order and chain the results", "Always prefer query_openkb_wiki...") rather than the first sentence. `_SYSTEM_PROMPT_LEAK_RE` checks distinctive structural phrases across the entire system prompt.
-- **Clean-Checkout Reproducibility & Unstaged State**: `reference_system/fixtures/customers.db` is un-ignored in `.gitignore` (`!reference_system/fixtures/customers.db`), and `mcp-guardeval` is declared as an editable path dependency (`mcp-guardeval = {path = "agenteval", develop = true}`). Note: Seed fixtures (`customers.db`), `wiki/`, benchmark scripts, and Docker files are currently untracked/uncommitted pending explicit user staging instructions.
+- **Clean-Checkout Reproducibility & Committed State**: `reference_system/fixtures/customers.db` is un-ignored in `.gitignore` (`!reference_system/fixtures/customers.db`), `mcp-guardeval` is declared as an editable path dependency (`mcp-guardeval = {path = "agenteval", develop = true}`), and all seed fixtures (`customers.db`), `wiki/`, Docker files, and benchmark scripts (`scripts/benchmark_*.py`) are fully committed and pushed to `main`.
 - **Poetry Lock Tracking**: Removed `poetry.lock` from `.gitignore` so lockfile updates are version-controlled rather than silently ignored.
 - **Docker Compose Volume Directory Prevention**: Configured `docker-compose.yml` to bind mount directory `./traces:/app/traces` and set `TRACES_DB=/app/traces/traces.db` rather than mounting `./traces.db` directly as a file. This prevents Docker from creating `traces.db` as a folder on clean hosts where `traces.db` does not yet exist.
 - **Package Metadata Normalization**: Set official package author metadata across both `pyproject.toml` and `agenteval/pyproject.toml` to `Jeneesh Surani <jeneeshsurani@gmail.com>`, matching repo license and git identity before PyPI publishing.
