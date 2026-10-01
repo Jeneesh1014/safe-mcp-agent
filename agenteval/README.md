@@ -150,7 +150,7 @@ guardeval --techniques SAFE-T1201 SAFE-T1203 MY-CUSTOM-001
 Example output:
 
 ```
-agenteval 0.3.3
+agenteval 0.3.4
 ============================================================
   Traces in DB: 42
   Tool dispatches: 156

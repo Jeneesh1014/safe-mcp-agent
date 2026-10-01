@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.3.4] — 2026-10-01
+
+### Changed
+- Synchronized CLI and Pytest plugin documentation outputs to reflect the 100% block rate (7/7 BLOCKED) matching the defended reference agent suite.
+- Re-aligned default SAFE-MCP attack matrix taxonomy and execution ordering with the reference evaluation harness.
+
 ## [0.3.3] — 2026-09-16
 
 ### Changed
